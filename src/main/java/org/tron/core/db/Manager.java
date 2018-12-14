@@ -6,6 +6,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import java.util.stream.IntStream;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -1082,7 +1083,8 @@ public class Manager {
       return;
     }
     try {
-      logList.forEach(log -> {
+      IntStream.range(0,logList.size()).forEach(idx -> {
+        org.tron.protos.Protocol.TransactionInfo.Log log = logList.get(idx);
         byte[] logContractAddress = MUtil.convertToTronAddress(log.getAddress().toByteArray());
         Protocol.SmartContract.ABI abi = abiCache.getIfPresent(logContractAddress);
         if (abi == null) {
@@ -1155,10 +1157,10 @@ public class Manager {
 
           long blockNumber = block.getBlockHeader().getRawData().getNumber();
           long blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
-          logger.info("Event blockNumber:{} blockTimestamp:{} contractAddress:{} eventName:{} returnValues:{} raw:{} txId:{}",
+          logger.info("Event blockNumber:{} blockTimestamp:{} contractAddress:{} eventName:{} returnValues:{} raw:{} txId:{} idx:{}",
                   blockNumber, blockTimestamp,
                   Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
-                  Hex.toHexString(transactionInfoCapsule.getId()));
+                  Hex.toHexString(transactionInfoCapsule.getId()), idx);
 
 //          EventLogEntity eventLogEntity = new EventLogEntity(blockNumber, blockTimestamp,
 //                  Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
