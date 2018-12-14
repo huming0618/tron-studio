@@ -25,6 +25,7 @@ import org.tron.abi.datatypes.Type;
 import org.tron.abi.datatypes.generated.AbiTypes;
 import org.tron.common.overlay.discover.node.Node;
 import org.tron.common.runtime.config.VMConfig;
+import org.tron.common.runtime.utils.MUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.ForkController;
 import org.tron.common.utils.SessionOptional;
@@ -1081,17 +1082,17 @@ public class Manager {
       return;
     }
     try {
-      Protocol.SmartContract.ABI abi = abiCache.getIfPresent(contractAddress);
-      if (abi == null) {
-        abi = getContractStore().getABI(contractAddress);
-        if (abi == null) {
-          return;
-        }
-        abiCache.put(contractAddress, abi);
-      }
-      Protocol.SmartContract.ABI finalAbi = abi;
       logList.forEach(log -> {
-        finalAbi.getEntrysList().forEach(abiEntry -> {
+        byte[] logContractAddress = MUtil.convertToTronAddress(log.getAddress().toByteArray());
+        Protocol.SmartContract.ABI abi = abiCache.getIfPresent(logContractAddress);
+        if (abi == null) {
+          abi = getContractStore().getABI(logContractAddress);
+          if (abi == null) {
+            return;
+          }
+          abiCache.put(logContractAddress, abi);
+        }
+        abi.getEntrysList().forEach(abiEntry -> {
           if (abiEntry.getType() != Protocol.SmartContract.ABI.Entry.EntryType.Event) {
             return;
           }
@@ -1150,6 +1151,7 @@ public class Manager {
           }
           rawJsonObject.put("topics", rawTopicsJsonArray);
           rawJsonObject.put("data", rawLogData);
+          rawJsonObject.put("contract", Hex.toHexString(logContractAddress));
 
           long blockNumber = block.getBlockHeader().getRawData().getNumber();
           long blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
